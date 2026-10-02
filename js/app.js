@@ -535,8 +535,8 @@
     $('#btn-novo-rel').addEventListener('click', () => { const r = { id: 'rel_' + Date.now(), nome: 'Novo relatório', titulo: 'Novo Relatório', subtitulo: '', params: [], secoes: [{ titulo: 'Seção 1', sql: 'SELECT elemento_despesa, fonte, SUM(valor_liquido) AS valor\nFROM v_liquidacoes\nWHERE sem_empenho = 0\nGROUP BY 1, 2\nORDER BY 1, 2', tipo: 'tabela', agrupar: 'elemento_despesa', totalizar: true }], rodape: 'Fonte: remessas ao SIM/TCE-CE.' }; state.relatorios.push(r); salvarRelatorios(); state.relSel = r.id; renderRelatorios(); renderDestinos(); });
     $('#entidade').addEventListener('input', e => { state.config.entidade = e.target.value; lsSet('sim_config', state.config); });
 
-    const art = !!(global.claude) || /claude\.(ai|site)|claudeusercontent/.test(location.host);
-    if (art) $('#aviso-artefato').hidden = false;
+    const art = !!(global.claude) || /claude\.(ai|site)|claudeusercontent/.test(location.host) || !global.XLSX;
+    if (art) { $('#aviso-artefato').hidden = false; ['#btn-csv', '#btn-xlsx', '#btn-rel-xlsx', '#btn-rel-html', '#btn-imprimir'].forEach(id => { $(id).hidden = true; }); }
     status('Pronto. Carregue os pacotes ZIP das remessas.');
   }
 
