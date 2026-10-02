@@ -1,0 +1,43 @@
+[
+  {
+    "id": "exemplo_liquidacoes_fonte_mes",
+    "nome": "Exemplo - Liquidações por fonte e competência",
+    "titulo": "Liquidações por Fonte e Competência",
+    "subtitulo": "Valores líquidos de estornos",
+    "params": [
+      {
+        "nome": "fonte_prefixo",
+        "rotulo": "Prefixo da fonte (vazio = todas)",
+        "padrao": "54"
+      }
+    ],
+    "secoes": [
+      {
+        "titulo": "Por fonte e mês",
+        "tipo": "pivot",
+        "pivot": {
+          "linha": "fonte",
+          "coluna": "competencia",
+          "valor": "valor"
+        },
+        "sql": "SELECT fonte, comp_br(_competencia) AS competencia, SUM(valor_liquido) AS valor FROM v_liquidacoes WHERE sem_empenho = 0 AND fonte_recurso_ok('{{fonte_prefixo}}', fonte) GROUP BY 1, 2"
+      },
+      {
+        "titulo": "Detalhe",
+        "sql": "SELECT fonte, elemento_despesa, numero_empenho, data_br(data_liquidacao) AS data_liquidacao, comp_br(_competencia) AS competencia, _arquivo AS arquivo, _linha AS linha, nome_credor, valor_liquidacao AS valor, situacao FROM v_liquidacoes WHERE sem_empenho = 0 AND fonte_recurso_ok('{{fonte_prefixo}}', fonte) ORDER BY fonte, elemento_despesa, numero_empenho, data_liquidacao",
+        "agrupar": "fonte",
+        "totalizar": true,
+        "destaque": {
+          "coluna": "situacao",
+          "valor": "Estorno"
+        },
+        "rotulos": {
+          "numero_empenho": "Empenho",
+          "nome_credor": "Credor",
+          "valor": "Valor (R$)"
+        }
+      }
+    ],
+    "rodape": "Fonte: remessas ao SIM/TCE-CE."
+  }
+]

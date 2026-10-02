@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Análise SIM TCE-CE</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="topo">
+  <h1>Análise SIM TCE-CE <small>cruzamento de remessas e relatórios</small></h1>
+  <nav class="abas" role="tablist">
+    <button data-aba="arquivos" role="tab">1. Arquivos</button>
+    <button data-aba="tabelas" role="tab">2. Tabelas</button>
+    <button data-aba="consulta" role="tab">3. Consulta</button>
+    <button data-aba="relatorios" role="tab">4. Relatórios</button>
+    <button data-aba="dicionario" role="tab">Dicionário</button>
+  </nav>
+  <span id="status" class="status"></span>
+</header>
+<main>
+  <div id="erro-fatal" class="erro" hidden></div>
+  <div id="aviso-artefato" class="aviso nao-imprimir" hidden>Nesta versão publicada o navegador bloqueia impressão e download. Use "Copiar" para levar tabelas ao Excel, ou abra o <code>index.html</code> do repositório no seu computador para exportar Excel/PDF.</div>
+
+  <!-- ================================================== ARQUIVOS -->
+  <section id="painel-arquivos" class="painel">
+    <div class="cartao">
+      <h2>Carregar remessas</h2>
+      <p class="ajuda">Arraste os pacotes ZIP mensais (ex.: <code>145202312PAAAA.zip</code>) ou arquivos avulsos (<code>LQ202312.DCD</code>, <code>NE202312.DCD</code>…). Tudo é processado no seu navegador; nada é enviado a servidores. Carregue todas as competências do exercício para que os cruzamentos (liquidação × empenho) fiquem completos.</p>
+      <div id="zona" class="zona"><strong>Solte os arquivos aqui</strong> ou clique para escolher</div>
+      <input id="input-arquivos" type="file" multiple accept=".zip,.DCD,.BAL,.CPF,.LCO,.ORC,.CRD,.DCR,.PAT,.OSE,.OUT,.BAS,.CTR,.dcd,.bal,.cpf,.lco,.orc,.crd,.dcr,.pat,.ose,.out,.bas,.ctr" hidden>
+      <div class="linha" style="margin-top:10px">
+        <button id="btn-arquivo" class="btn primario">Escolher arquivos…</button>
+        <button id="btn-limpar" class="btn perigo">Remover todos os arquivos</button>
+        <span id="resumo-carga" class="ajuda"></span>
+      </div>
+      <div id="erros-arquivos" class="erro" hidden style="margin-top:8px"></div>
+    </div>
+    <div class="cartao">
+      <h2>Arquivos carregados</h2>
+      <div id="lista-arquivos" class="lista-arquivos"></div>
+    </div>
+  </section>
+
+  <!-- ================================================== TABELAS -->
+  <section id="painel-tabelas" class="painel">
+    <div class="cartao">
+      <h2>Tabelas e visões</h2>
+      <p class="ajuda">Cada tipo de arquivo vira uma tabela com o nome do prefixo (NE, LQ, NP…). As visões <code>v_liquidacoes</code>, <code>v_empenhos</code> e <code>v_pagamentos</code> já trazem os cruzamentos prontos. Toda tabela tem as colunas <code>_arquivo</code>, <code>_competencia</code>, <code>_linha</code> e <code>_pacote</code>.</p>
+      <div id="tabelas-lista" class="tabelas-lista"></div>
+    </div>
+    <div id="tabela-detalhe" class="cartao" hidden>
+      <h2 id="tabela-titulo"></h2>
+      <p id="tabela-desc" class="ajuda"></p>
+      <div class="linha">
+        <label>Filtrar prévia (qualquer coluna)<input id="tabela-filtro" type="text" placeholder="ex.: 01120034"></label>
+        <button id="btn-tabela-sql" class="btn">Abrir no editor SQL</button>
+      </div>
+      <h3>Prévia (até 500 linhas; clique no cabeçalho para ordenar)</h3>
+      <div id="tabela-preview"></div>
+      <h3>Colunas</h3>
+      <div id="tabela-colunas"></div>
+    </div>
+  </section>
+
+  <!-- ================================================== CONSULTA -->
+  <section id="painel-consulta" class="painel">
+    <div class="cartao">
+      <h2>Construtor de consultas</h2>
+      <p class="ajuda">Monte o cruzamento escolhendo a tabela base, as junções (as chaves em comum são sugeridas), colunas, filtros e totalizações. O SQL gerado pode ser editado livremente abaixo.</p>
+      <div id="builder"></div>
+    </div>
+    <div class="cartao">
+      <h2>SQL</h2>
+      <p class="ajuda">Dialeto SQLite. Funções extras: <code>data_br(d)</code>, <code>comp_br(c)</code>, <code>moeda(v)</code>, <code>fonte_completa(ex, fonte)</code>, <code>fonte_recurso_ok(prefixo, fonte)</code>. Ctrl+Enter executa.</p>
+      <textarea id="sql" class="sql" spellcheck="false"></textarea>
+      <div class="linha" style="margin-top:8px">
+        <button id="btn-executar" class="btn primario">Executar</button>
+        <button id="btn-copiar" class="btn">Copiar (colar no Excel)</button>
+        <button id="btn-csv" class="btn">Baixar CSV</button>
+        <button id="btn-xlsx" class="btn">Baixar Excel</button>
+        <span style="flex:1"></span>
+        <label class="ajuda">Salvar como seção de relatório: <input id="secao-nome" type="text" placeholder="título da seção" style="width:180px"></label>
+        <select id="secao-destino"></select>
+        <button id="btn-secao" class="btn">Adicionar ao relatório</button>
+      </div>
+      <div id="sql-erro" class="erro" hidden style="margin-top:8px"></div>
+    </div>
+    <div class="cartao">
+      <h2>Resultado</h2>
+      <div id="resultado"><p class="ajuda">Execute uma consulta.</p></div>
+    </div>
+  </section>
+
+  <!-- ================================================== RELATÓRIOS -->
+  <section id="painel-relatorios" class="painel">
+    <div class="cartao nao-imprimir">
+      <h2>Relatórios</h2>
+      <div class="linha">
+        <label>Entidade (cabeçalho impresso)<input id="entidade" type="text" placeholder="PREFEITURA MUNICIPAL DE …" style="width:320px"></label>
+        <button id="btn-novo-rel" class="btn">Novo relatório em branco</button>
+        <button id="btn-exportar-defs" class="btn">Exportar definições (JSON)</button>
+        <label class="btn" style="cursor:pointer">Importar definições (JSON)<input id="input-defs" type="file" accept=".json" hidden></label>
+      </div>
+      <p class="ajuda">Modelos incluídos não são editáveis; use "Duplicar" para criar uma cópia personalizável. Relatórios personalizados ficam salvos neste navegador; exporte o JSON para guardar ou compartilhar.</p>
+      <div id="rel-lista" class="rel-lista" style="margin-top:8px"></div>
+    </div>
+    <div id="rel-editor-wrap" class="cartao nao-imprimir" hidden>
+      <h2 id="rel-sel-nome"></h2>
+      <h3>Parâmetros</h3>
+      <div id="rel-params" class="params"></div>
+      <div class="linha" style="margin-top:10px">
+        <button id="btn-gerar" class="btn primario">Gerar relatório</button>
+        <span id="rel-acoes" class="linha" hidden>
+          <button id="btn-imprimir" class="btn">Imprimir / salvar em PDF</button>
+          <button id="btn-rel-xlsx" class="btn">Baixar Excel (uma aba por quadro)</button>
+          <button id="btn-rel-html" class="btn">Baixar HTML</button>
+          <button id="btn-rel-copiar" class="btn">Copiar tudo (colar no Excel)</button>
+        </span>
+      </div>
+      <div id="rel-erros" class="erro" hidden style="margin-top:8px"></div>
+      <p id="rel-preset-aviso" class="ajuda" hidden>Modelo incluído: para alterar títulos, SQL ou quadros, clique em "Duplicar" na lista.</p>
+      <div id="rel-editor" hidden style="margin-top:10px"></div>
+    </div>
+    <div class="cartao folha-wrap folha"><div id="folha"></div></div>
+  </section>
+
+  <!-- ================================================== DICIONÁRIO -->
+  <section id="painel-dicionario" class="painel">
+    <div class="cartao">
+      <h2>Dicionário dos leiautes</h2>
+      <div id="dicionario"></div>
+    </div>
+  </section>
+</main>
+
+<script src="vendor/jszip.min.js"></script>
+<script src="vendor/xlsx.full.min.js"></script>
+<script src="vendor/sql-wasm-b64.js"></script>
+<script src="vendor/sql-wasm.js"></script>
+<script src="js/layouts.js"></script>
+<script src="js/parser.js"></script>
+<script src="js/db.js"></script>
+<script src="js/builder.js"></script>
+<script src="js/reports.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
