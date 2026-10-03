@@ -528,6 +528,7 @@
     $('#btn-gerar').addEventListener('click', gerarRelatorio);
     $('#btn-imprimir').addEventListener('click', () => window.print());
     $('#btn-rel-xlsx').addEventListener('click', () => { if (state.resultadoRel) R.exportarXLSX(state.resultadoRel, (relAtual().nome || 'relatorio').replace(/[^\w\-]+/g, '_') + '.xlsx'); });
+    $('#btn-rel-docx').addEventListener('click', () => { if (!state.resultadoRel || !global.SIM_DOCX) return; global.SIM_DOCX.exportar(state.resultadoRel, (relAtual().nome || 'relatorio').replace(/[^\w\-]+/g, '_') + '.docx', { entidade: state.config.entidade, periodo: periodo() }).catch(e => status('Falha ao gerar o Word: ' + e.message, 'erro')); });
     $('#btn-rel-copiar').addEventListener('click', e => { if (!state.resultadoRel) return; const partes = state.resultadoRel.secoes.filter(s => !s.erro).map(s => s.def.titulo + '\n' + R.resultadoParaTSV(s.rotulos, s.values)); copiarTexto(partes.join('\n\n'), e.target); });
     $('#btn-rel-html').addEventListener('click', () => { if (!state.resultadoRel) return; const css = Array.from(document.styleSheets).map(ss => { try { return Array.from(ss.cssRules).map(r => r.cssText).join('\n'); } catch (e) { return ''; } }).join('\n'); const html = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>${esc(relAtual().titulo)}</title><style>${css}\nbody{background:#fff}.folha{border:0}</style></head><body><main><div id="painel-relatorios" class="painel ativo"><div class="cartao folha-wrap folha">${$('#folha').innerHTML}</div></div></main></body></html>`; R.baixar((relAtual().nome || 'relatorio').replace(/[^\w\-]+/g, '_') + '.html', html, 'text/html;charset=utf-8'); });
     $('#btn-exportar-defs').addEventListener('click', exportarDefinicoes);
@@ -536,7 +537,7 @@
     $('#entidade').addEventListener('input', e => { state.config.entidade = e.target.value; lsSet('sim_config', state.config); });
 
     const art = !!(global.claude) || /claude\.(ai|site)|claudeusercontent/.test(location.host) || !global.XLSX;
-    if (art) { $('#aviso-artefato').hidden = false; ['#btn-csv', '#btn-xlsx', '#btn-rel-xlsx', '#btn-rel-html', '#btn-imprimir'].forEach(id => { $(id).hidden = true; }); }
+    if (art) { $('#aviso-artefato').hidden = false; ['#btn-csv', '#btn-xlsx', '#btn-rel-xlsx', '#btn-rel-docx', '#btn-rel-html', '#btn-imprimir'].forEach(id => { $(id).hidden = true; }); }
     status('Pronto. Carregue os pacotes ZIP das remessas.');
   }
 

@@ -4,6 +4,18 @@ Aplicativo para **cruzar os arquivos de remessa mensal ao SIM (Sistema de Inform
 
 Roda inteiramente no navegador (sem servidor, sem instalação): os pacotes ZIP das competências são lidos localmente, carregados em um banco SQLite em memória (sql.js) e consultados por um construtor visual ou por SQL. Nada sai do computador.
 
+## Versão portátil (um único arquivo, para levar a qualquer computador)
+
+`dist/AnaliseSIMTCE.html` é a aplicação inteira — HTML, CSS, JS e as três bibliotecas (sql.js, JSZip, SheetJS) — embutida em **um único arquivo `.html`**, sem nenhuma referência externa. Copie esse arquivo para um pendrive, anexe num e-mail ou salve na nuvem; em qualquer computador com Chrome, Edge ou Firefox basta dar duplo clique para abrir, sem internet e sem instalar nada. Nessa versão (aberta como arquivo local, fora do site do Claude) **impressão/PDF, Excel e Word funcionam normalmente** - só a página publicada como artefato do Claude bloqueia isso (é uma restrição do visualizador do claude.ai, não do aplicativo).
+
+Para gerar o arquivo de novo depois de alterar o código-fonte (`index.html`, `css/`, `js/`):
+
+```
+node tools/build-standalone.js
+```
+
+Isso regrava `dist/AnaliseSIMTCE.html` a partir dos arquivos-fonte. Use o código-fonte (`index.html` + `css/` + `js/`) para desenvolver; use `dist/AnaliseSIMTCE.html` para usar ou distribuir.
+
 ## Como usar
 
 1. Baixe/clone este repositório e abra `index.html` em um navegador moderno (Chrome, Edge ou Firefox).
@@ -13,7 +25,7 @@ Roda inteiramente no navegador (sem servidor, sem instalação): os pacotes ZIP 
    - `v_empenhos` = NE + AE + LQ + EL + NP (empenhado, anulado, liquidado, estornado, pago);
    - `v_pagamentos` = NP × NE × CP × EG.
 4. Aba **3. Consulta**: monte o cruzamento escolhendo tabela base, junções (chaves em comum sugeridas), colunas, filtros e totalizações; o SQL gerado pode ser editado e executado (Ctrl+Enter). Exporte para CSV/Excel, copie para o Excel ou salve a consulta como **seção de um relatório**.
-5. Aba **4. Relatórios**: escolha um modelo, informe os parâmetros, gere e então **imprima/salve em PDF**, baixe **Excel (uma aba por quadro)**, HTML ou copie tudo. Modelos incluídos podem ser duplicados e editados (títulos, SQL, quadros, subtotais, tabelas cruzadas). As definições ficam no navegador e podem ser exportadas/importadas em JSON (`relatorios/` guarda exemplos).
+5. Aba **4. Relatórios**: escolha um modelo, informe os parâmetros, gere e então **imprima/salve em PDF**, baixe **Excel** (uma aba por quadro), **Word (.docx)**, HTML, ou copie tudo. Modelos incluídos podem ser duplicados e editados (títulos, SQL, quadros, subtotais, tabelas cruzadas). As definições ficam no navegador e podem ser exportadas/importadas em JSON (`relatorios/` guarda exemplos).
 6. Aba **Dicionário**: todos os leiautes catalogados com o grau de confiança de cada nome de campo.
 
 Toda tabela recebe as colunas `_arquivo`, `_competencia`, `_linha` (número da linha dentro do arquivo de remessa, como citado nos quadros do demonstrativo) e `_pacote`.
@@ -54,23 +66,27 @@ Os Quadros 1 (conciliação com o Modelo 10) e 6 (lançamentos não refletidos n
 
 - Os nomes dos campos foram inferidos dos dados (ver `docs/dicionario.md`); 320 campos estão marcados como "chute". NE, LQ, EL, AE, NP, CP, PF e os identificadores de função/subfunção/programa/ação/elemento/fonte estão confirmados.
 - Os três valores da NE (`valor_empenho`, `valor_22`, `valor_23`) somam (`valor_empenho = valor_22 + valor_23` em 100% da amostra), mas o significado exato das parcelas não foi confirmado.
-- A versão publicada como artefato no claude.ai não permite impressão nem download (restrição do visualizador); use "Copiar" lá, ou abra o `index.html` localmente para PDF/Excel.
-- Relatórios personalizados ficam no `localStorage` do navegador: exporte o JSON para não perdê-los.
+- A versão publicada como artefato no claude.ai não permite impressão nem download, para nenhum artefato (restrição do visualizador, não deste aplicativo); use "Copiar" lá, ou abra `dist/AnaliseSIMTCE.html` localmente para PDF/Excel/Word.
+- O conversor para `.docx` escreve o OOXML diretamente (sem biblioteca), com tabelas, subtotais, destaques e página em paisagem A4; não reproduz estilos avançados do Word (não é necessário para abrir, editar ou imprimir).
+- Relatórios personalizados ficam no `localStorage` do navegador: exporte o JSON para não perdê-los. O `localStorage` é por origem - a versão portátil (arquivo local) e a publicada no claude.ai guardam relatórios separadamente.
 
 ## Estrutura
 
 ```
-index.html          página única da aplicação
-css/style.css       estilos (tela e impressão A4 paisagem)
-js/layouts.js       catálogo dos leiautes (nomes, tipos, confiança)
-js/parser.js        leitura de ZIP e CSV (Windows-1252)
-js/db.js            SQLite em memória, índices, funções SQL e visões de cruzamento
-js/builder.js       construtor visual -> SQL
-js/reports.js       modelos de relatório, execução, renderização e exportação
-js/app.js           interface
-vendor/             sql.js 1.14.2, JSZip 3.10.1, SheetJS 0.18.5 (uso offline)
-docs/dicionario.md  dicionário gerado a partir de js/layouts.js
-relatorios/         exemplos de definições de relatório (JSON) para importar
+index.html                página única da aplicação (código-fonte, para desenvolver)
+css/style.css             estilos (tela e impressão A4 paisagem)
+js/layouts.js             catálogo dos leiautes (nomes, tipos, confiança)
+js/parser.js              leitura de ZIP e CSV (Windows-1252)
+js/db.js                  SQLite em memória, índices, funções SQL e visões de cruzamento
+js/builder.js             construtor visual -> SQL
+js/reports.js             modelos de relatório, execução, renderização e exportação (PDF/Excel/HTML)
+js/docx.js                exportação para Word (.docx), OOXML gerado diretamente
+js/app.js                 interface
+vendor/                   sql.js 1.14.2, JSZip 3.10.1, SheetJS 0.18.5 (uso offline)
+tools/build-standalone.js gera dist/AnaliseSIMTCE.html a partir do código-fonte
+dist/AnaliseSIMTCE.html   versão portátil: um único arquivo, para usar em qualquer computador
+docs/dicionario.md        dicionário gerado a partir de js/layouts.js
+relatorios/               exemplos de definições de relatório (JSON) para importar
 ```
 
 Funções SQL extras disponíveis: `data_br(aaaammdd)`, `comp_br(aaaamm)`, `moeda(v)`, `fonte_completa(ex, fonte)`, `fonte_recurso_ok(prefixo, fonte)`.
